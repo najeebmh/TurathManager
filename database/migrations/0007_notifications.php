@@ -1,0 +1,132 @@
+<?php
+
+// الإشعارات والمستلمون والقوالب وسجل الإرسال (طابور) وإعدادات واتساب وأجهزة Push
+$t = 'ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci';
+
+return [
+    'up' => [
+        "CREATE TABLE notification_templates (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            template_key VARCHAR(60) NOT NULL,
+            channel ENUM('in_app','push','whatsapp') NOT NULL,
+            title VARCHAR(200) NOT NULL,
+            body TEXT NOT NULL,
+            whatsapp_template_name VARCHAR(100) NULL,
+            whatsapp_language VARCHAR(10) NULL,
+            whatsapp_category VARCHAR(20) NULL,
+            whatsapp_params VARCHAR(500) NULL,
+            meta_status VARCHAR(30) NULL,
+            is_active TINYINT(1) NOT NULL DEFAULT 1,
+            updated_by CHAR(36) NULL,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_tpl_key_channel (template_key, channel)
+        ) $t",
+        "CREATE TABLE notification_subscriptions (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            event_type VARCHAR(60) NOT NULL,
+            user_id CHAR(36) NOT NULL,
+            channel ENUM('in_app','push','whatsapp') NOT NULL,
+            center_scope VARCHAR(36) NOT NULL DEFAULT '*',
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_sub (event_type, user_id, channel, center_scope),
+            KEY idx_sub_user (user_id),
+            CONSTRAINT fk_sub_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
+        ) $t",
+        "CREATE TABLE notifications (
+            id CHAR(36) NOT NULL PRIMARY KEY,
+            type VARCHAR(60) NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            body TEXT NOT NULL,
+            booking_id CHAR(36) NULL,
+            link VARCHAR(255) NULL,
+            dedupe_key VARCHAR(190) NOT NULL,
+            data JSON NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_notif_dedupe (dedupe_key),
+            KEY idx_notif_booking (booking_id),
+            KEY idx_notif_time (created_at),
+            CONSTRAINT fk_notif_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE RESTRICT
+        ) $t",
+        "CREATE TABLE notification_recipients (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            notification_id CHAR(36) NOT NULL,
+            user_id CHAR(36) NOT NULL,
+            read_at DATETIME NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_nr (notification_id, user_id),
+            KEY idx_nr_user_read (user_id, read_at),
+            CONSTRAINT fk_nr_notif FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE RESTRICT,
+            CONSTRAINT fk_nr_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
+        ) $t",
+        "CREATE TABLE notification_logs (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            notification_id CHAR(36) NOT NULL,
+            user_id CHAR(36) NULL,
+            channel ENUM('push','whatsapp') NOT NULL,
+            destination VARCHAR(255) NULL,
+            status ENUM('queued','sending','sent','delivered','read','failed','cancelled','skipped') NOT NULL DEFAULT 'queued',
+            attempts INT UNSIGNED NOT NULL DEFAULT 0,
+            next_attempt_at DATETIME NULL,
+            last_error VARCHAR(500) NULL,
+            provider_message_id VARCHAR(190) NULL,
+            idempotency_key VARCHAR(190) NOT NULL,
+            request_payload JSON NULL,
+            response_payload JSON NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            sent_at DATETIME NULL,
+            delivered_at DATETIME NULL,
+            UNIQUE KEY uq_nl_idem (idempotency_key),
+            UNIQUE KEY uq_nl_provider (provider_message_id),
+            KEY idx_nl_queue (status, next_attempt_at),
+            CONSTRAINT fk_nl_notif FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE RESTRICT
+        ) $t",
+        "CREATE TABLE whatsapp_settings (
+            id TINYINT UNSIGNED NOT NULL PRIMARY KEY,
+            business_account_id VARCHAR(64) NULL,
+            phone_number_id VARCHAR(64) NULL,
+            access_token_enc TEXT NULL,
+            app_secret_enc TEXT NULL,
+            verify_token_enc TEXT NULL,
+            mode ENUM('test','production') NOT NULL DEFAULT 'test',
+            is_enabled TINYINT(1) NOT NULL DEFAULT 0,
+            connection_status VARCHAR(30) NOT NULL DEFAULT 'not_configured',
+            last_checked_at DATETIME NULL,
+            last_error VARCHAR(500) NULL,
+            updated_by CHAR(36) NULL,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ) $t",
+        "CREATE TABLE whatsapp_webhook_events (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            payload JSON NOT NULL,
+            signature_valid TINYINT(1) NOT NULL,
+            processed_at DATETIME NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ) $t",
+        "CREATE TABLE push_devices (
+            id CHAR(36) NOT NULL PRIMARY KEY,
+            user_id CHAR(36) NOT NULL,
+            device_id CHAR(36) NOT NULL,
+            platform ENUM('android','ios','web','windows') NOT NULL,
+            token VARCHAR(512) NOT NULL,
+            token_hash CHAR(64) NOT NULL,
+            is_active TINYINT(1) NOT NULL DEFAULT 1,
+            last_seen_at DATETIME NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_push_token (token_hash),
+            KEY idx_push_user (user_id, is_active),
+            CONSTRAINT fk_push_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
+        ) $t",
+    ],
+    'down' => [
+        'DROP TABLE IF EXISTS push_devices',
+        'DROP TABLE IF EXISTS whatsapp_webhook_events',
+        'DROP TABLE IF EXISTS whatsapp_settings',
+        'DROP TABLE IF EXISTS notification_logs',
+        'DROP TABLE IF EXISTS notification_recipients',
+        'DROP TABLE IF EXISTS notifications',
+        'DROP TABLE IF EXISTS notification_subscriptions',
+        'DROP TABLE IF EXISTS notification_templates',
+    ],
+];

@@ -1,0 +1,40 @@
+# أسرار البيئة
+.env
+.env.*
+!.env.example
+
+# الاعتماديات
+/vendor/
+node_modules/
+
+# التخزين المحلي
+/storage/logs/*
+/storage/uploads/*
+/storage/backups/*
+/storage/cache/*
+!/storage/*/.gitkeep
+
+# مخرجات البناء
+/apps/desktop/src-tauri/target/
+/apps/desktop/src-tauri/gen/
+/apps/mobile/android/app/build/
+/apps/mobile/android/.gradle/
+/apps/mobile/android/app/src/main/assets/public/
+/apps/mobile/android/local.properties
+*.apk
+*.aab
+*.keystore
+*.jks
+google-services.json
+firebase-service-account*.json
+
+# الاختبارات والأدوات
+.phpunit.cache/
+.phpunit.result.cache
+/test-results/
+/playwright-report/
+.idea/
+.vscode/
+*.log
+.DS_Store
+Thumbs.db

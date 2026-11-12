@@ -1,0 +1,26 @@
+# قواعد Apache لمشروع Turath Manager (XAMPP / الاستضافة)
+Options -Indexes
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    CGIPassAuth On
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # منع الوصول إلى الملفات والمجلدات الحساسة
+    RewriteRule ^(backend|database|storage|vendor|tests|scripts|docs|node_modules|apps|\.git)(/|$) - [F,L]
+    RewriteRule (^|/)\.(env|git|htaccess) - [F,L]
+    RewriteRule ^(composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml(\.dist)?)$ - [F,L]
+
+    # واجهة REST API
+    RewriteRule ^api(/.*)?$ public/index.php [L,QSA]
+
+    # ملفات الواجهة
+    RewriteCond %{REQUEST_URI} !/frontend/
+    RewriteCond %{REQUEST_URI} !/public/index\.php
+    RewriteRule ^(.*)$ frontend/$1 [L]
+</IfModule>
+
+<FilesMatch "^\.env|\.(log|sql|gz|ini|lock|md)$">
+    Require all denied
+</FilesMatch>

@@ -1,0 +1,40 @@
+{
+    "name": "najeebmh/turath-manager",
+    "description": "نظام إدارة محل الملابس النسائية التراثية الصنعانية - Turath Manager",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.2",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-mbstring": "*",
+        "ext-json": "*",
+        "ext-openssl": "*",
+        "ext-sodium": "*",
+        "ext-fileinfo": "*",
+        "ext-curl": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "TurathManager\\": "backend/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TurathManager\\Tests\\": "tests/php/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "migrate": "php scripts/migrate.php up"
+    },
+    "config": {
+        "sort-packages": true,
+        "platform": {
+            "php": "8.2.12"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11"
+    }
+}
