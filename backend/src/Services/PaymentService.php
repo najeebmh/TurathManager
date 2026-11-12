@@ -66,7 +66,7 @@ final class PaymentService
 
     public function forBooking(string $bookingId): array
     {
-        $rows = $this->repo->all('SELECT p.*, u.full_name AS created_by_name FROM payments p LEFT JOIN users u ON u.id = p.created_by WHERE p.booking_id = ? ORDER BY p.paid_at, p.created_at', [$bookingId]);
+        $rows = $this->repo->all('SELECT p.*, u.full_name AS created_by_name FROM payments p LEFT JOIN users u ON u.id = p.created_by WHERE p.booking_id = ? ORDER BY p.paid_at, p.seq', [$bookingId]);
         return ['summary' => $this->summary($bookingId), 'items' => array_map([self::class, 'out'], $rows)];
     }
 

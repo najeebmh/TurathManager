@@ -18,7 +18,7 @@ final class FoundationTest extends TestCase
         $this->assertSame(200, $s);
         $this->assertSame('ok', $d['status']);
         $this->assertSame('up', $d['database']['status']);
-        $this->assertSame('0010_reference_data', $d['database']['schema_version']);
+        $this->assertSame('0011_insertion_sequences', $d['database']['schema_version']);
         $this->assertSame(0, $d['database']['pending_migrations']);
     }
 

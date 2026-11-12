@@ -63,7 +63,7 @@ final class NotificationService
             return null;
         }
         $items = $this->repo->all("SELECT p.name, ca.name AS category, bi.quantity FROM booking_items bi JOIN products p ON p.id = bi.product_id JOIN categories ca ON ca.id = p.category_id
-            WHERE bi.booking_id = ? AND bi.status <> 'cancelled' ORDER BY bi.created_at", [$bookingId]);
+            WHERE bi.booking_id = ? AND bi.status <> 'cancelled' ORDER BY bi.seq", [$bookingId]);
         return [
             'booking' => $b,
             'vars' => [
@@ -257,7 +257,7 @@ final class NotificationService
 
     public function templates(): array
     {
-        return array_map(static fn ($t) => $t + ['event_label' => self::EVENTS[$t['template_key']] ?? $t['template_key'], 'is_active' => (bool) $t['is_active']],
+        return array_map(static fn ($t) => array_merge($t, ['event_label' => self::EVENTS[$t['template_key']] ?? $t['template_key'], 'is_active' => (bool) $t['is_active'], 'id' => (int) $t['id']]),
             $this->repo->all('SELECT id, template_key, channel, title, body, whatsapp_template_name, whatsapp_language, whatsapp_category, whatsapp_params, meta_status, is_active, updated_at FROM notification_templates ORDER BY template_key, channel'));
     }
 

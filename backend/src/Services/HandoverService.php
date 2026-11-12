@@ -153,7 +153,7 @@ final class HandoverService
     {
         $rows = $this->repo->all('SELECT h.*, u.full_name AS recorded_by_name, p.name AS product_name, p.code AS product_code, bi.quantity, b.booking_no, r.damaged_quantity
             FROM handovers h JOIN booking_items bi ON bi.id = h.booking_item_id JOIN products p ON p.id = bi.product_id JOIN bookings b ON b.id = h.booking_id
-            LEFT JOIN users u ON u.id = h.recorded_by LEFT JOIN item_condition_reports r ON r.handover_id = h.id WHERE h.booking_id = ? ORDER BY h.occurred_at', [$bookingId]);
+            LEFT JOIN users u ON u.id = h.recorded_by LEFT JOIN item_condition_reports r ON r.handover_id = h.id WHERE h.booking_id = ? ORDER BY h.occurred_at, h.handover_type', [$bookingId]);
         return array_map(fn ($h) => self::out($h) + ['images' => $this->images($h['id'])], $rows);
     }
 

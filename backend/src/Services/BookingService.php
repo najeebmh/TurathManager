@@ -406,7 +406,7 @@ final class BookingService
         ], $this->items->all("SELECT bi.*, p.name AS product_name, p.code AS product_code, ca.name AS category_name, t.name AS type_name,
                 (SELECT file_path FROM product_images i WHERE i.product_id = p.id AND i.deleted_at IS NULL ORDER BY i.is_primary DESC, i.sort_order LIMIT 1) AS product_image
             FROM booking_items bi JOIN products p ON p.id = bi.product_id JOIN categories ca ON ca.id = p.category_id LEFT JOIN category_types t ON t.id = p.category_type_id
-            WHERE bi.booking_id = ? ORDER BY bi.created_at, bi.id", [$id]));
+            WHERE bi.booking_id = ? ORDER BY bi.seq", [$id]));
         $o['history'] = array_map(static fn ($h) => [
             'from_status' => $h['from_status'], 'to_status' => $h['to_status'], 'reason' => $h['reason'],
             'changed_by_name' => $h['changed_by_name'], 'changed_at' => Clock::toIso($h['changed_at']),
@@ -650,7 +650,7 @@ final class BookingService
     public function revision(string $bookingId, string $summary, ?string $userId): void
     {
         $b = $this->bookings->find($bookingId);
-        $items = $this->items->all('SELECT id, product_id, quantity, unit_price, install_at, removal_at, status, notes FROM booking_items WHERE booking_id = ? ORDER BY created_at, id', [$bookingId]);
+        $items = $this->items->all('SELECT id, product_id, quantity, unit_price, install_at, removal_at, status, notes FROM booking_items WHERE booking_id = ? ORDER BY seq', [$bookingId]);
         $rev = (int) $this->bookings->value('SELECT COALESCE(MAX(revision),0) + 1 FROM booking_revisions WHERE booking_id = ?', [$bookingId]);
         $snapshot = array_intersect_key($b, array_flip(['status', 'center_id', 'customer_id', 'install_at', 'removal_at', 'address', 'total_price', 'notes'])) + ['items' => $items];
         $this->bookings->exec('INSERT INTO booking_revisions (booking_id, revision, change_summary, snapshot, changed_by, created_at) VALUES (?, ?, ?, ?, ?, ?)', [

@@ -127,7 +127,7 @@ final class ProductService
             'reference_type' => $m['reference_type'], 'reference_id' => $m['reference_id'],
             'created_by_name' => $m['created_by_name'], 'created_at' => Clock::toIso($m['created_at']),
         ], $this->repo->all("SELECT m.*, u.full_name AS created_by_name FROM inventory_movements m LEFT JOIN users u ON u.id = m.created_by
-            WHERE m.product_id = ? ORDER BY m.created_at DESC, m.balance_after LIMIT $limit", [$productId]));
+            WHERE m.product_id = ? ORDER BY m.seq DESC LIMIT $limit", [$productId]));
     }
 
     public function create(array $input, CurrentUser $actor, ?Request $req = null): array

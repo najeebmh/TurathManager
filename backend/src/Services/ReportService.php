@@ -129,7 +129,7 @@ final class ReportService
             JOIN categories ca ON ca.id = p.category_id LEFT JOIN category_types ty ON ty.id = p.category_type_id
             WHERE b.status <> 'cancelled' AND bi.status <> 'cancelled' AND bi.install_at >= ? AND bi.install_at < ?
             GROUP BY ca.name, type_name ORDER BY bookings_count DESC", [$f, $t]);
-        return ['rows' => array_map(static fn ($r) => $r + ['bookings_count' => (int) $r['bookings_count'], 'pieces' => (int) $r['pieces']], $rows)];
+        return ['rows' => array_map(static fn ($r) => array_merge($r, ['bookings_count' => (int) $r['bookings_count'], 'pieces' => (int) $r['pieces']]), $rows)];
     }
 
     public function topProducts(?string $from, ?string $to, int $limit = 20): array
@@ -139,7 +139,7 @@ final class ReportService
             FROM booking_items bi JOIN bookings b ON b.id = bi.booking_id JOIN products p ON p.id = bi.product_id JOIN categories ca ON ca.id = p.category_id
             WHERE b.status <> 'cancelled' AND bi.status <> 'cancelled' AND bi.install_at >= ? AND bi.install_at < ?
             GROUP BY p.id, p.code, p.name, ca.name ORDER BY bookings_count DESC, pieces DESC LIMIT $limit", [$f, $t]);
-        return ['rows' => array_map(static fn ($r) => $r + ['bookings_count' => (int) $r['bookings_count'], 'pieces' => (int) $r['pieces']], $rows)];
+        return ['rows' => array_map(static fn ($r) => array_merge($r, ['bookings_count' => (int) $r['bookings_count'], 'pieces' => (int) $r['pieces']]), $rows)];
     }
 
     public function inventoryMovements(?string $from, ?string $to, ?string $productId = null): array
@@ -153,7 +153,7 @@ final class ReportService
         }
         $rows = $this->repo->all("SELECT m.*, pr.code, pr.name AS product_name, u.full_name AS created_by_name
             FROM inventory_movements m JOIN products pr ON pr.id = m.product_id LEFT JOIN users u ON u.id = m.created_by
-            WHERE m.created_at >= ? AND m.created_at < ? $extra ORDER BY m.created_at DESC LIMIT 1000", $p);
+            WHERE m.created_at >= ? AND m.created_at < ? $extra ORDER BY m.seq DESC LIMIT 1000", $p);
         return ['rows' => array_map(static fn ($r) => [
             'created_at' => Clock::toIso($r['created_at']), 'code' => $r['code'], 'product_name' => $r['product_name'],
             'movement_type' => $r['movement_type'], 'label' => ProductService::MOVEMENT_LABELS[$r['movement_type']] ?? $r['movement_type'],
